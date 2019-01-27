@@ -1,4 +1,4 @@
-package com.birjuvachhani.revix
+package com.birjuvachhani.revix.common
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
