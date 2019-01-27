@@ -1,6 +1,7 @@
-package com.birjuvachhani.revix
+package com.birjuvachhani.revix.smart
 
 import androidx.annotation.LayoutRes
+import com.birjuvachhani.revix.common.BaseModel
 
 /**
  * Created by Birju Vachhani on 04/12/18.

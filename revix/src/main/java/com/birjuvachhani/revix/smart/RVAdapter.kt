@@ -1,4 +1,4 @@
-package com.birjuvachhani.revix
+package com.birjuvachhani.revix.smart
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,6 +6,10 @@ import android.widget.Filter
 import android.widget.Filterable
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
+import com.birjuvachhani.revix.common.BaseModel
+import com.birjuvachhani.revix.common.BaseVH
+import com.birjuvachhani.revix.common.RecyclerAdapterState
+import com.birjuvachhani.revix.common.classHash
 
 /**
  * Created by Birju Vachhani on 30/11/18.
@@ -37,26 +41,26 @@ class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseVH {
         return when (viewType) {
             EMPTY -> {
-                builder.emptyView?.layout?.let { layoutRes ->
+                builder.emptyView?.run {
                     BaseVH(
                         LayoutInflater.from(parent.context)
-                            .inflate(layoutRes, parent, false)
+                            .inflate(layoutId, parent, false)
                     )
                 } ?: throw Exception("Layout Res not found for empty view")
             }
             ERROR -> {
-                builder.errorView?.layout?.let { layoutRes ->
+                builder.errorView?.run {
                     BaseVH(
                         LayoutInflater.from(parent.context)
-                            .inflate(layoutRes, parent, false)
+                            .inflate(layoutId, parent, false)
                     )
                 } ?: throw Exception("Layout Res not found for error view")
             }
             LOADING -> {
-                builder.loadingView?.layout?.let { layoutRes ->
+                builder.loadingView?.run {
                     BaseVH(
                         LayoutInflater.from(parent.context)
-                            .inflate(layoutRes, parent, false)
+                            .inflate(layoutId, parent, false)
                     )
                 } ?: throw Exception("Layout Res not found loading view")
             }

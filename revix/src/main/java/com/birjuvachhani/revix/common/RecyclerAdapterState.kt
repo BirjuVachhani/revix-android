@@ -1,4 +1,4 @@
-package com.birjuvachhani.revix
+package com.birjuvachhani.revix.common
 
 sealed class RecyclerAdapterState {
     object Empty : RecyclerAdapterState()
