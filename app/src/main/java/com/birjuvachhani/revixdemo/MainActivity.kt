@@ -17,11 +17,11 @@
 package com.birjuvachhani.revixdemo
 
 import android.os.Bundle
-import android.os.Handler
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.birjuvachhani.revix.BaseModel
-import com.birjuvachhani.revix.RVAdapter
+import com.birjuvachhani.revix.basic.BasicAdapter
+import com.birjuvachhani.revix.common.BaseModel
+import com.birjuvachhani.revix.smart.RVAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_empty.view.*
 import kotlinx.android.synthetic.main.item_image.view.*
@@ -36,10 +36,8 @@ class MainActivity : AppCompatActivity() {
         val adapter: RVAdapter =
             RVAdapter {
                 addViewType<ChatImageModel> {
-                    layout = R.layout.item_image
+                    layout from R.layout.item_image
                     bind { model, holder ->
-                        bind { _, _ -> }
-                        onClick { _, _, _ -> }
                         holder.itemView.tvImageText.text = model.imageTitle
                     }
                     onClick { view, model, position ->
@@ -50,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 addViewType<ChatVideoModel> {
-                    layout = R.layout.item_video
+                    layout from R.layout.item_video
                     bind { model, holder ->
                         holder.itemView.tvVideoText.text = model.videoTitle
                     }
@@ -62,20 +60,20 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 addEmptyView {
-                    layout = R.layout.item_empty
+                    layout from R.layout.item_empty
                     bind { holder ->
                         // Empty View Binding
                         holder.itemView.tvEmpty.text = "Nothing found"
                     }
                 }
                 addLoadingView {
-                    layout = R.layout.item_empty
+                    layout from R.layout.item_empty
                     bind {
                         it.itemView.tvEmpty.text = "Loading"
                     }
                 }
                 addErrorView {
-                    layout = R.layout.item_empty
+                    layout from R.layout.item_empty
                     bind {
                         it.itemView.tvEmpty.text = "Something went wrong"
                     }
@@ -84,7 +82,20 @@ class MainActivity : AppCompatActivity() {
                 addDefaultLoadingView()
             }
 
-        rvList.adapter = adapter
+        val basicAdapter = BasicAdapter<ChatImageModel> {
+            setViewType {
+                layout from R.layout.item_image
+                bind { model, holder ->
+                    holder.itemView.tvImageText.text = model.imageTitle
+                }
+
+                onClick { view, model, position ->
+                    Toast.makeText(this@MainActivity, model.imageTitle, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        rvList.adapter = basicAdapter
         val list = ArrayList<BaseModel>()
         list.add(ChatImageModel())
         list.add(ChatVideoModel())
@@ -94,10 +105,16 @@ class MainActivity : AppCompatActivity() {
         list.add(ChatVideoModel("Video 2"))
         list.add(ChatVideoModel("Video 3"))
         list.add(ChatImageModel("Image 3"))
-        adapter.setData(list)
-        adapter.filter.filter("Video")
-        adapter.filter.filter("Image")
-
-        Handler().postDelayed({ adapter.clearFilter() }, 5000)
+        basicAdapter.setData(
+            arrayListOf(
+                ChatImageModel("Image 1"),
+                ChatImageModel("Image 2"),
+                ChatImageModel("Image 3")
+            )
+        )
+//        adapter.filter.filter("Video")
+//        adapter.filter.filter("Image")
+//
+//        Handler().postDelayed({ adapter.clearFilter() }, 5000)
     }
 }

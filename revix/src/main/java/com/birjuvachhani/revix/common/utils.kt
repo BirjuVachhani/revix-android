@@ -1,4 +1,4 @@
-package com.birjuvachhani.revix
+package com.birjuvachhani.revix.common
 
 /**
  * Created by Birju Vachhani on 04/12/18.

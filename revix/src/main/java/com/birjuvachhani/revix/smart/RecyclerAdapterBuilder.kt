@@ -14,20 +14,17 @@
  *    limitations under the License.
  */
 
-package com.birjuvachhani.revix
+package com.birjuvachhani.revix.smart
 
 import androidx.annotation.StringRes
+import com.birjuvachhani.revix.R
+import com.birjuvachhani.revix.common.BaseModel
 import kotlinx.android.synthetic.main.item_empty_default.view.*
 
 /**
  * Created by Birju Vachhani on 04/12/18.
  */
 
-@DslMarker
-annotation class RecyclerAdapterBuilderMarker
-
-@RecyclerAdapterBuilderMarker
-@ViewTypeBuilderMarker
 class RecyclerAdapterBuilder {
 
     internal var holderData = mutableMapOf<Int, HolderData>()
@@ -70,7 +67,7 @@ class RecyclerAdapterBuilder {
         @Suppress("UNCHECKED_CAST")
         holderData[holder.modelClass.hashCode()] =
                 HolderData(
-                    holder.layout,
+                    holder.layoutId,
                     holder as ViewTypeBuilder<BaseModel>
                 )
     }
@@ -86,7 +83,7 @@ class RecyclerAdapterBuilder {
 
     fun addDefaultEmptyView(msg: String = "No item found") {
         emptyView = SpecialViewTypeBuilder().apply {
-            layout = R.layout.item_empty_default
+            layout from R.layout.item_empty_default
             bind {
                 it.itemView.tvDefaultErrorMessage.text = msg
             }
@@ -95,7 +92,7 @@ class RecyclerAdapterBuilder {
 
     fun addDefaultEmptyView(@StringRes msgId: Int) {
         emptyView = SpecialViewTypeBuilder().apply {
-            layout = R.layout.item_empty_default
+            layout from R.layout.item_empty_default
             bind {
                 it.itemView.tvDefaultErrorMessage.text = it.itemView.context.getString(msgId)
             }
@@ -104,7 +101,7 @@ class RecyclerAdapterBuilder {
 
     fun addDefaultLoadingView() {
         loadingView = SpecialViewTypeBuilder().apply {
-            layout = R.layout.item_loading_default
+            layout from R.layout.item_loading_default
         }
     }
 }

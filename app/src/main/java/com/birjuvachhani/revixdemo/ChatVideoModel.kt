@@ -16,7 +16,7 @@
 
 package com.birjuvachhani.revixdemo
 
-import com.birjuvachhani.revix.BaseModel
+import com.birjuvachhani.revix.common.BaseModel
 
 /**
  * Created by Birju Vachhani on 30/11/18.
