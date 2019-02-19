@@ -16,7 +16,11 @@
 
 package com.birjuvachhani.revix.common
 
+import androidx.databinding.ViewDataBinding
+import androidx.recyclerview.widget.RecyclerView
+
 /**
- * Created by Birju Vachhani on 30/11/18.
+ * Created by Birju Vachhani on 04/12/18.
  */
-interface BaseModel
+
+class BaseBindingVH(val mBinding: ViewDataBinding) : RecyclerView.ViewHolder(mBinding.root)
