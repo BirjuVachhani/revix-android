@@ -1,17 +1,17 @@
 /*
- * Copyright 2018 BirjuVachhani (https://github.com/BirjuVachhani)
+ * Copyright 2019 BirjuVachhani (https://github.com/BirjuVachhani)
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.birjuvachhani.revix.smart
@@ -46,30 +46,24 @@ class RecyclerAdapterBuilder {
     }
 
     fun addEmptyView(func: SpecialViewTypeBuilder.() -> Unit) {
-        emptyView = SpecialViewTypeBuilder().apply {
-            func()
-        }
+        emptyView = SpecialViewTypeBuilder().apply(func)
     }
 
     fun addErrorView(func: SpecialViewTypeBuilder.() -> Unit) {
-        errorView = SpecialViewTypeBuilder().apply {
-            func()
-        }
+        errorView = SpecialViewTypeBuilder().apply(func)
     }
 
     fun addLoadingView(func: SpecialViewTypeBuilder.() -> Unit) {
-        loadingView = SpecialViewTypeBuilder().apply {
-            func()
-        }
+        loadingView = SpecialViewTypeBuilder().apply(func)
     }
 
     private fun <T : BaseModel> addToHolderData(holder: ViewTypeBuilder<T>) {
         @Suppress("UNCHECKED_CAST")
         holderData[holder.modelClass.hashCode()] =
-                HolderData(
-                    holder.layoutId,
-                    holder as ViewTypeBuilder<BaseModel>
-                )
+            HolderData(
+                holder.layoutId,
+                holder as ViewTypeBuilder<BaseModel>
+            )
     }
 
     fun hasEmptyView(): Boolean = emptyView !== null
@@ -85,7 +79,7 @@ class RecyclerAdapterBuilder {
         emptyView = SpecialViewTypeBuilder().apply {
             layout from R.layout.item_empty_default
             bind {
-                it.itemView.tvDefaultErrorMessage.text = msg
+                it.tvDefaultErrorMessage.text = msg
             }
         }
     }
@@ -94,7 +88,7 @@ class RecyclerAdapterBuilder {
         emptyView = SpecialViewTypeBuilder().apply {
             layout from R.layout.item_empty_default
             bind {
-                it.itemView.tvDefaultErrorMessage.text = it.itemView.context.getString(msgId)
+                it.tvDefaultErrorMessage.text = it.context.getString(msgId)
             }
         }
     }

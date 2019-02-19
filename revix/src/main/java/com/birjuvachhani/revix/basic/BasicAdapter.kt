@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 BirjuVachhani (https://github.com/BirjuVachhani)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.birjuvachhani.revix.basic
 
 import android.view.LayoutInflater
@@ -8,107 +24,103 @@ import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.birjuvachhani.revix.common.BaseVH
 import com.birjuvachhani.revix.common.RecyclerAdapterState
+import com.birjuvachhani.revix.smart.SpecialViewType
 
-class BasicAdapter<T>(func: BasicAdapterBuilder<T>.() -> Unit) : RecyclerView.Adapter<BaseVH>(), Filterable {
+open class BasicAdapter<T>(func: BasicAdapterBuilder<T>.() -> Unit) : RecyclerView.Adapter<BaseVH>(), Filterable {
 
     protected var baseList: ArrayList<T> = ArrayList()
     protected var filteredList: ArrayList<T> = ArrayList()
     protected val builder: BasicAdapterBuilder<T>
-    protected val state = MutableLiveData<RecyclerAdapterState>()
+    private val state = MutableLiveData<RecyclerAdapterState>()
     protected var filter = AdapterFilter()
 
-    protected val EMPTY = 1
-    protected val NON_EMPTY = 2
-    protected val LOADING = 3
-    protected val ERROR = 4
+    companion object {
+        private const val EMPTY = 1
+        private const val NON_EMPTY = 2
+        private const val LOADING = 3
+        private const val ERROR = 4
+    }
 
     init {
         state.value = RecyclerAdapterState.Empty
-        builder = BasicAdapterBuilder<T>().apply {
-            func()
-        }
+        builder = BasicAdapterBuilder<T>().apply(func)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseVH {
-        return when (viewType) {
-            EMPTY -> {
-                builder.emptyViewBuilder?.run {
-                    BaseVH(
-                        LayoutInflater.from(parent.context)
-                            .inflate(layoutId, parent, false)
-                    )
-                } ?: throw Exception("Layout Res not found for empty view")
-            }
-            ERROR -> {
-                builder.errorViewBuilder?.run {
-                    BaseVH(
-                        LayoutInflater.from(parent.context)
-                            .inflate(layoutId, parent, false)
-                    )
-                } ?: throw Exception("Layout Res not found for error view")
-            }
-            LOADING -> {
-                builder.loadingViewBuilder?.run {
-                    BaseVH(
-                        LayoutInflater.from(parent.context)
-                            .inflate(layoutId, parent, false)
-                    )
-                } ?: throw Exception("Layout Res not found loading view")
-            }
-            else -> {
-                builder.viewBuilder?.let {
-                    if (it.layoutId == 0) {
-                        throw RuntimeException("No layoutId specified for recycler item")
-                    }
-                    val view = LayoutInflater.from(parent.context).inflate(it.layoutId, parent, false)
-                    return BaseVH(view)
-                } ?: throw RuntimeException("View type is not found")
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseVH = when (viewType) {
+        EMPTY -> {
+            getViewHolderFromType(builder.emptyViewType, parent, "empty")
+        }
+        ERROR -> {
+            getViewHolderFromType(builder.errorViewType, parent, "error")
+        }
+        LOADING -> {
+            getViewHolderFromType(builder.loadingViewType, parent, "loading")
+        }
+        else -> {
+            val type = builder.itemViewType
+            when (type) {
+                is BasicViewType.Specified<*> -> getViewHolder(parent, type.layoutId)
+                is BasicViewType.Unspecified -> throw Exception("No layoutId specified for recycler view item")
             }
         }
     }
 
-    override fun getItemCount(): Int {
-        return when {
-            state.value is RecyclerAdapterState.Empty && builder.hasEmptyView() -> 1
-            state.value is RecyclerAdapterState.Error && builder.hasErrorView() -> 1
-            state.value is RecyclerAdapterState.Loading && builder.hasLoadingView() -> 1
-            state.value is RecyclerAdapterState.Data -> filteredList.size
-            else -> 0
+    private fun getViewHolderFromType(type: SpecialViewType, parent: ViewGroup, typedName: String) =
+        when (type) {
+            is SpecialViewType.Inflated -> BaseVH(type.view)
+            is SpecialViewType.Raw -> getViewHolder(parent, type.layoutId)
+            is SpecialViewType.Unspecified -> throw Exception("Tried to use $typedName view when it is not configured")
         }
+
+    private fun getViewHolder(parent: ViewGroup, layoutId: Int): BaseVH =
+        BaseVH(LayoutInflater.from(parent.context).inflate(layoutId, parent, false))
+
+    override fun getItemCount(): Int = when {
+        state.value is RecyclerAdapterState.Empty && builder.hasEmptyView() -> 1
+        state.value is RecyclerAdapterState.Error && builder.hasErrorView() -> 1
+        state.value is RecyclerAdapterState.Loading && builder.hasLoadingView() -> 1
+        state.value is RecyclerAdapterState.Data -> filteredList.size
+        else -> 0
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when {
-            state.value is RecyclerAdapterState.Empty && builder.hasEmptyView() -> EMPTY
-            state.value is RecyclerAdapterState.Error && builder.hasErrorView() -> ERROR
-            state.value is RecyclerAdapterState.Loading && builder.hasLoadingView() -> LOADING
-            else -> NON_EMPTY
-        }
+    override fun getItemViewType(position: Int): Int = when {
+        state.value is RecyclerAdapterState.Empty && builder.hasEmptyView() -> EMPTY
+        state.value is RecyclerAdapterState.Error && builder.hasErrorView() -> ERROR
+        state.value is RecyclerAdapterState.Loading && builder.hasLoadingView() -> LOADING
+        else -> NON_EMPTY
     }
 
     override fun onBindViewHolder(holder: BaseVH, position: Int) {
         when (getItemViewType(position)) {
             EMPTY -> {
-                builder.emptyViewBuilder?.apply { bindFunc(holder) }
+                val type = builder.emptyViewType
+                when (type) {
+                    is SpecialViewType.Raw -> type.bindFunc(holder.itemView)
+                }
             }
             ERROR -> {
-                builder.errorViewBuilder?.apply { bindFunc(holder) }
+                val type = builder.errorViewType
+                when (type) {
+                    is SpecialViewType.Raw -> type.bindFunc(holder.itemView)
+                }
             }
             LOADING -> {
-                builder.loadingViewBuilder?.apply { bindFunc(holder) }
+                val type = builder.loadingViewType
+                when (type) {
+                    is SpecialViewType.Raw -> type.bindFunc(holder.itemView)
+                }
             }
             NON_EMPTY -> {
-                builder.viewBuilder?.bindFunc?.invoke(
-                    filteredList[position],
-                    holder
-                )
-                holder.itemView.setOnClickListener {
-                    builder.viewBuilder?.clickFunc?.invoke(
-                        holder.itemView,
-                        filteredList[position],
-                        holder.adapterPosition
-                    )
+                val type = builder.itemViewType
+                when (type) {
+                    is BasicViewType.Specified -> {
+                        type.bindFunc.invoke(filteredList[position], holder.itemView)
+                        holder.itemView.setOnClickListener {
+                            type.clickFunc(holder.itemView, filteredList[position], holder.adapterPosition)
+                        }
+                    }
                 }
+
             }
         }
     }
@@ -160,8 +172,12 @@ class BasicAdapter<T>(func: BasicAdapterBuilder<T>.() -> Unit) : RecyclerView.Ad
                 filteredList = baseList
             } else {
                 filteredList.clear()
+                val type = builder.itemViewType
                 filteredList.addAll(baseList.filter { item ->
-                    builder.viewBuilder?.filterFunc?.invoke(item, searchString) ?: false
+                    when (type) {
+                        is BasicViewType.Specified -> type.filterFunc(item, searchString)
+                        else -> false
+                    }
                 })
             }
             state.postValue(

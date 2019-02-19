@@ -14,27 +14,28 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.revix.smart
+package com.birjuvachhani.revix.binding
 
 import android.view.View
 import androidx.annotation.LayoutRes
+import com.birjuvachhani.revix.common.BaseBindingVH
 import com.birjuvachhani.revix.common.BaseModel
-import com.birjuvachhani.revix.common.BaseVH
 
 /**
  * Created by Birju Vachhani on 04/12/18.
  */
 
-class ViewTypeBuilder<T : BaseModel> {
+class ViewTypeBindingBuilder<T : BaseModel> {
     val layout = this
     @LayoutRes
     internal var layoutId: Int = 0
     lateinit var modelClass: Class<T>
-    internal var bindFunc: (t: T, holder: BaseVH) -> Unit = { _, _ -> }
+    internal var bindFunc: (t: T, holder: BaseBindingVH) -> Unit = { _, _ -> }
     internal var clickFunc: (view: View, model: T, position: Int) -> Unit = { _, _, _ -> }
     internal var filterFunc: (model: T, search: String) -> Boolean = { _, _ -> false }
+    var br: Int = -1
 
-    fun bind(func: (model: T, holder: BaseVH) -> Unit) {
+    fun bind(func: (model: T, holder: BaseBindingVH) -> Unit) {
         this.bindFunc = func
     }
 
@@ -51,36 +52,18 @@ class ViewTypeBuilder<T : BaseModel> {
     }
 }
 
-class SpecialViewTypeBuilder {
+class SpecialViewTypeBindingBuilder {
 
     val layout = this
     @LayoutRes
     internal var layoutId: Int = 0
-    internal var bindFunc: (view: View) -> Unit = {}
-    internal var view: View? = null
+    internal var bindFunc: (holder: BaseBindingVH) -> Unit = {}
 
-    fun bind(func: (view: View) -> Unit) {
+    fun bind(func: (holder: BaseBindingVH) -> Unit) {
         this.bindFunc = func
     }
 
     infix fun from(@LayoutRes id: Int) {
         layoutId = id
     }
-
-    internal fun build(): SpecialViewType {
-        val v = view
-        return when {
-            v != null -> SpecialViewType.Inflated(v)
-            layoutId.isValidRes() -> SpecialViewType.Raw(layoutId, bindFunc)
-            else -> throw Exception("No view configuration is provided for Special View. Layout res or view is missing")
-        }
-    }
 }
-
-sealed class SpecialViewType {
-    data class Inflated(val view: View) : SpecialViewType()
-    data class Raw(@LayoutRes val layoutId: Int, val bindFunc: (view: View) -> Unit) : SpecialViewType()
-    object Unspecified : SpecialViewType()
-}
-
-fun Int.isValidRes(): Boolean = this != -1 && this != 0

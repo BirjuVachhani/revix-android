@@ -14,29 +14,25 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.revix.smart
+package com.birjuvachhani.revix.binding.basic
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
+import androidx.annotation.LayoutRes
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
-import com.birjuvachhani.revix.common.BaseModel
-import com.birjuvachhani.revix.common.BaseVH
+import com.birjuvachhani.revix.common.BaseBindingVH
 import com.birjuvachhani.revix.common.RecyclerAdapterState
 
-/**
- * Created by Birju Vachhani on 30/11/18.
- */
+class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit) : RecyclerView.Adapter<BaseBindingVH>(),
+    Filterable {
 
-class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
-    RecyclerView.Adapter<BaseVH>(), Filterable {
-
-    protected var baseList: ArrayList<BaseModel> = ArrayList()
-    protected var filteredList: ArrayList<BaseModel> = ArrayList()
-    internal var holders: MutableMap<Int, HolderData> = mutableMapOf()
-    protected val builder: RecyclerAdapterBuilder
+    protected var baseList: ArrayList<T> = ArrayList()
+    protected var filteredList: ArrayList<T> = ArrayList()
+    protected val builder: BasicBindingAdapterBuilder<T>
     protected val state = MutableLiveData<RecyclerAdapterState>()
     protected var filter = AdapterFilter()
 
@@ -47,49 +43,37 @@ class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
 
     init {
         state.value = RecyclerAdapterState.Empty
-        builder = RecyclerAdapterBuilder().apply {
-            config()
-        }
-        holders = builder.holderData
+        builder = BasicBindingAdapterBuilder<T>().apply(func)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseVH {
-        return when (viewType) {
-            EMPTY -> {
-                builder.emptyView?.run {
-                    BaseVH(
-                        LayoutInflater.from(parent.context)
-                            .inflate(layoutId, parent, false)
-                    )
-                } ?: throw Exception("Layout Res not found for empty view")
-            }
-            ERROR -> {
-                builder.errorView?.run {
-                    BaseVH(
-                        LayoutInflater.from(parent.context)
-                            .inflate(layoutId, parent, false)
-                    )
-                } ?: throw Exception("Layout Res not found for error view")
-            }
-            LOADING -> {
-                builder.loadingView?.run {
-                    BaseVH(
-                        LayoutInflater.from(parent.context)
-                            .inflate(layoutId, parent, false)
-                    )
-                } ?: throw Exception("Layout Res not found loading view")
-            }
-            else -> {
-                holders[viewType]?.let {
-                    if (it.layout == 0) {
-                        throw RuntimeException("No layout specified for model: ${it.builder.modelClass.simpleName}")
-                    }
-                    val view = LayoutInflater.from(parent.context).inflate(it.layout, parent, false)
-                    return BaseVH(view)
-                } ?: throw RuntimeException("View type is not found")
-            }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseBindingVH = when (viewType) {
+        EMPTY -> {
+            builder.emptyViewBuilder?.run {
+                getViewHolder(parent, layoutId)
+            } ?: throw Exception("Layout Res not found for empty view")
+        }
+        ERROR -> {
+            builder.errorViewBuilder?.run {
+                getViewHolder(parent, layoutId)
+            } ?: throw Exception("Layout Res not found for error view")
+        }
+        LOADING -> {
+            builder.loadingViewBuilder?.run {
+                getViewHolder(parent, layoutId)
+            } ?: throw Exception("Layout Res not found loading view")
+        }
+        else -> {
+            builder.viewBuilder?.let {
+                if (it.layoutId == 0) {
+                    throw RuntimeException("No layoutId specified for recycler item")
+                }
+                getViewHolder(parent, it.layoutId)
+            } ?: throw RuntimeException("View type is not found")
         }
     }
+
+    private fun getViewHolder(parent: ViewGroup, @LayoutRes id: Int) =
+        BaseBindingVH(DataBindingUtil.inflate(LayoutInflater.from(parent.context), id, parent, false))
 
     override fun getItemCount(): Int {
         return when {
@@ -106,36 +90,27 @@ class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
             state.value is RecyclerAdapterState.Empty && builder.hasEmptyView() -> EMPTY
             state.value is RecyclerAdapterState.Error && builder.hasErrorView() -> ERROR
             state.value is RecyclerAdapterState.Loading && builder.hasLoadingView() -> LOADING
-            state.value is RecyclerAdapterState.Data -> filteredList[position].classHash()
-            else -> 0
+            else -> NON_EMPTY
         }
     }
 
-    override fun onBindViewHolder(holder: BaseVH, position: Int) {
+    override fun onBindViewHolder(holder: BaseBindingVH, position: Int) {
         when (getItemViewType(position)) {
             EMPTY -> {
-                builder.emptyView?.apply { bindFunc(holder.itemView) }
+                builder.emptyViewBuilder?.apply { bindFunc(holder) }
             }
             ERROR -> {
-                builder.errorView?.apply { bindFunc(holder.itemView) }
+                builder.errorViewBuilder?.apply { bindFunc(holder) }
             }
             LOADING -> {
-                builder.loadingView?.apply { bindFunc(holder.itemView) }
+                builder.loadingViewBuilder?.apply { bindFunc(holder) }
             }
-            else -> {
-                holders[filteredList[position].classHash()]?.run {
-                    builder.bindFunc.invoke(
-                        filteredList[position],
-                        holder
-                    )
-                }
-                holder.itemView.setOnClickListener {
-                    holders[filteredList[position].classHash()]?.run {
-                        builder.clickFunc.invoke(
-                            holder.itemView,
-                            filteredList[position],
-                            holder.adapterPosition
-                        )
+            NON_EMPTY -> {
+                builder.viewBuilder?.apply {
+                    holder.mBinding.takeIf { br != -1 }?.setVariable(br, filteredList[position])
+                    bindFunc(filteredList[position], holder)
+                    holder.itemView.setOnClickListener {
+                        clickFunc(holder.itemView, filteredList[position], holder.adapterPosition)
                     }
                 }
             }
@@ -146,7 +121,7 @@ class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
         return filter
     }
 
-    fun setData(newList: ArrayList<BaseModel>) {
+    fun setData(newList: ArrayList<T>) {
         checkEmpty(newList)
         this.filteredList = newList
         this.baseList = ArrayList(newList)
@@ -163,7 +138,7 @@ class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
         notifyDataSetChanged()
     }
 
-    private fun checkEmpty(list: ArrayList<BaseModel>) {
+    private fun checkEmpty(list: ArrayList<T>) {
         state.value = when (list.size) {
             0 -> RecyclerAdapterState.Empty
             else -> RecyclerAdapterState.Data
@@ -190,9 +165,7 @@ class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
             } else {
                 filteredList.clear()
                 filteredList.addAll(baseList.filter { item ->
-                    holders[item.classHash()]
-                        ?.builder?.filterFunc
-                        ?.invoke(item, searchString) ?: false
+                    builder.viewBuilder?.filterFunc?.invoke(item, searchString) ?: false
                 })
             }
             state.postValue(

@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.revix.common
+package com.birjuvachhani.revix.binding
+
+import androidx.annotation.LayoutRes
+import com.birjuvachhani.revix.common.BaseModel
 
 /**
- * Created by Birju Vachhani on 30/11/18.
+ * Created by Birju Vachhani on 04/12/18.
  */
-interface BaseModel
+
+internal class BindingHolderData(@LayoutRes val layout: Int, val builder: ViewTypeBindingBuilder<BaseModel>)
