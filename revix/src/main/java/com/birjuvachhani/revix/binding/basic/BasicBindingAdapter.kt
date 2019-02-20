@@ -24,10 +24,12 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
+import com.birjuvachhani.revix.binding.SpecialBindingViewType
 import com.birjuvachhani.revix.common.BaseBindingVH
 import com.birjuvachhani.revix.common.RecyclerAdapterState
 
-class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit) : RecyclerView.Adapter<BaseBindingVH>(),
+open class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit) :
+    RecyclerView.Adapter<BaseBindingVH>(),
     Filterable {
 
     protected var baseList: ArrayList<T> = ArrayList()
@@ -36,10 +38,12 @@ class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit) : R
     protected val state = MutableLiveData<RecyclerAdapterState>()
     protected var filter = AdapterFilter()
 
-    protected val EMPTY = 1
-    protected val NON_EMPTY = 2
-    protected val LOADING = 3
-    protected val ERROR = 4
+    companion object {
+        protected const val EMPTY = 1
+        protected const val NON_EMPTY = 2
+        protected const val LOADING = 3
+        protected const val ERROR = 4
+    }
 
     init {
         state.value = RecyclerAdapterState.Empty
@@ -48,29 +52,29 @@ class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit) : R
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseBindingVH = when (viewType) {
         EMPTY -> {
-            builder.emptyViewBuilder?.run {
-                getViewHolder(parent, layoutId)
-            } ?: throw Exception("Layout Res not found for empty view")
+            getViewHolderFromType(builder.emptyViewType, parent, "empty")
         }
         ERROR -> {
-            builder.errorViewBuilder?.run {
-                getViewHolder(parent, layoutId)
-            } ?: throw Exception("Layout Res not found for error view")
+            getViewHolderFromType(builder.errorViewType, parent, "error")
         }
         LOADING -> {
-            builder.loadingViewBuilder?.run {
-                getViewHolder(parent, layoutId)
-            } ?: throw Exception("Layout Res not found loading view")
+            getViewHolderFromType(builder.loadingViewType, parent, "loading")
         }
         else -> {
-            builder.viewBuilder?.let {
-                if (it.layoutId == 0) {
-                    throw RuntimeException("No layoutId specified for recycler item")
-                }
-                getViewHolder(parent, it.layoutId)
-            } ?: throw RuntimeException("View type is not found")
+            val type = builder.itemViewType
+            when (type) {
+                is BasicBindingViewType.Specified<*> -> getViewHolder(parent, type.layoutId)
+                is BasicBindingViewType.Unspecified -> throw Exception("No layoutId specified for recycler view item")
+            }
         }
     }
+
+    private fun getViewHolderFromType(type: SpecialBindingViewType, parent: ViewGroup, typedName: String) =
+        when (type) {
+            is SpecialBindingViewType.Inflated -> BaseBindingVH(type.mBinding)
+            is SpecialBindingViewType.Raw -> getViewHolder(parent, type.layoutId)
+            is SpecialBindingViewType.Unspecified -> throw Exception("Tried to use $typedName view when it is not configured")
+        }
 
     private fun getViewHolder(parent: ViewGroup, @LayoutRes id: Int) =
         BaseBindingVH(DataBindingUtil.inflate(LayoutInflater.from(parent.context), id, parent, false))
@@ -97,20 +101,33 @@ class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit) : R
     override fun onBindViewHolder(holder: BaseBindingVH, position: Int) {
         when (getItemViewType(position)) {
             EMPTY -> {
-                builder.emptyViewBuilder?.apply { bindFunc(holder) }
+                val type = builder.emptyViewType
+                when (type) {
+                    is SpecialBindingViewType.Raw -> type.bindFunc(holder.mBinding)
+                }
             }
             ERROR -> {
-                builder.errorViewBuilder?.apply { bindFunc(holder) }
+                val type = builder.errorViewType
+                when (type) {
+                    is SpecialBindingViewType.Raw -> type.bindFunc(holder.mBinding)
+                }
             }
             LOADING -> {
-                builder.loadingViewBuilder?.apply { bindFunc(holder) }
+                val type = builder.loadingViewType
+                when (type) {
+                    is SpecialBindingViewType.Raw -> type.bindFunc(holder.mBinding)
+                }
             }
             NON_EMPTY -> {
-                builder.viewBuilder?.apply {
-                    holder.mBinding.takeIf { br != -1 }?.setVariable(br, filteredList[position])
-                    bindFunc(filteredList[position], holder)
-                    holder.itemView.setOnClickListener {
-                        clickFunc(holder.itemView, filteredList[position], holder.adapterPosition)
+                val type = builder.itemViewType
+                when (type) {
+                    is BasicBindingViewType.Specified -> {
+                        type.bindFunc.invoke(filteredList[position], holder.mBinding)
+                        holder.mBinding.takeIf { type.variable != -1 }
+                            ?.setVariable(type.variable, filteredList[position])
+                        holder.itemView.setOnClickListener {
+                            type.clickFunc(holder.itemView, filteredList[position], holder.adapterPosition)
+                        }
                     }
                 }
             }
@@ -164,8 +181,12 @@ class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit) : R
                 filteredList = baseList
             } else {
                 filteredList.clear()
+                val type = builder.itemViewType
                 filteredList.addAll(baseList.filter { item ->
-                    builder.viewBuilder?.filterFunc?.invoke(item, searchString) ?: false
+                    when (type) {
+                        is BasicBindingViewType.Specified -> type.filterFunc(item, searchString)
+                        else -> false
+                    }
                 })
             }
             state.postValue(
