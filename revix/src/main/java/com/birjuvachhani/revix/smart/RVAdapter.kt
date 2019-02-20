@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.birjuvachhani.revix.common.BaseModel
 import com.birjuvachhani.revix.common.BaseVH
 import com.birjuvachhani.revix.common.RecyclerAdapterState
+import com.birjuvachhani.revix.common.classHash
 
 /**
  * Created by Birju Vachhani on 30/11/18.

@@ -48,7 +48,7 @@ class BasicViewTypeBuilder<T> {
 
     internal fun build(): BasicViewType<T> {
         return when {
-            layoutId.isValidRes() -> BasicViewType.Specified(false, true, layoutId, bindFunc, clickFunc, filterFunc)
+            layoutId.isValidRes() -> BasicViewType.Specified(layoutId, bindFunc, clickFunc, filterFunc)
             else -> throw Exception("No layout is specified for specified type")
         }
     }
@@ -56,8 +56,6 @@ class BasicViewTypeBuilder<T> {
 
 sealed class BasicViewType<out T> {
     data class Specified<T>(
-        val temp: Boolean,
-        val temp2: Boolean,
         @LayoutRes val layoutId: Int,
         val bindFunc: (t: T, view: View) -> Unit,
         val clickFunc: (view: View, model: T, position: Int) -> Unit,

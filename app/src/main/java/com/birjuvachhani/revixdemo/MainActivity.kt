@@ -19,10 +19,9 @@ package com.birjuvachhani.revixdemo
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.birjuvachhani.revix.basic.BasicAdapter
+import com.birjuvachhani.revix.binding.basic.BasicBindingAdapter
 import com.birjuvachhani.revix.common.BaseModel
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.item_image.view.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -79,14 +78,27 @@ class MainActivity : AppCompatActivity() {
                  addDefaultLoadingView()
              }*/
 
-        val basicAdapter = BasicAdapter<ChatImageModel> {
-            setViewType {
-                layout from R.layout.item_image
-                bind { model, view ->
-                    view.tvImageText.text = model.imageTitle
-                }
+//        val basicAdapter = BasicAdapter<ChatImageModel> {
+//            setViewType {
+//                layout from R.layout.item_image
+//                bind { model, view ->
+//                    view.tvImageText.text = model.imageTitle
+//                }
+//
+//                onClick { view, model, position ->
+//                    Toast.makeText(this@MainActivity, model.imageTitle, Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//            emptyView(R.string.no_items_found)
+//            loadingView(android.R.color.holo_red_dark)
+//            errorView("Error!")
+//        }
 
-                onClick { view, model, position ->
+        val basicAdapter = BasicBindingAdapter<ChatImageModel> {
+            setViewType(BR.image) {
+                layout from R.layout.item_image
+
+                onClick { _, model, _ ->
                     Toast.makeText(this@MainActivity, model.imageTitle, Toast.LENGTH_SHORT).show()
                 }
             }

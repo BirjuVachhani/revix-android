@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.birjuvachhani.revix.common.BaseBindingVH
 import com.birjuvachhani.revix.common.BaseModel
 import com.birjuvachhani.revix.common.RecyclerAdapterState
+import com.birjuvachhani.revix.common.classHash
 
 /**
  * Created by Birju Vachhani on 30/11/18.
@@ -108,13 +109,13 @@ class RVBindingAdapter(config: BindingRecyclerAdapterBuilder.() -> Unit) :
     override fun onBindViewHolder(holder: BaseBindingVH, position: Int) {
         when (getItemViewType(position)) {
             EMPTY -> {
-                builder.emptyView?.apply { bindFunc(holder) }
+                builder.emptyView?.apply { bindFunc(holder.mBinding) }
             }
             ERROR -> {
-                builder.errorView?.apply { bindFunc(holder) }
+                builder.errorView?.apply { bindFunc(holder.mBinding) }
             }
             LOADING -> {
-                builder.loadingView?.apply { bindFunc(holder) }
+                builder.loadingView?.apply { bindFunc(holder.mBinding) }
             }
             else -> {
                 holders[filteredList[position].classHash()]?.run {
