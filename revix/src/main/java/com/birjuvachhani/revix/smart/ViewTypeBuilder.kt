@@ -28,7 +28,7 @@ import com.birjuvachhani.revix.common.BaseVH
 class ViewTypeBuilder<T : BaseModel> {
     val layout = this
     @LayoutRes
-    internal var layoutId: Int = 0
+    internal var layoutId: Int = -1
     lateinit var modelClass: Class<T>
     internal var bindFunc: (t: T, holder: BaseVH) -> Unit = { _, _ -> }
     internal var clickFunc: (view: View, model: T, position: Int) -> Unit = { _, _, _ -> }

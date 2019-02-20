@@ -29,9 +29,9 @@ import kotlinx.android.synthetic.main.item_empty_default.view.*
 class BindingRecyclerAdapterBuilder {
 
     internal var holderData = mutableMapOf<Int, BindingHolderData>()
-    internal var emptyView: SpecialViewTypeBindingBuilder? = null
-    internal var errorView: SpecialViewTypeBindingBuilder? = null
-    internal var loadingView: SpecialViewTypeBindingBuilder? = null
+    internal var emptyView: SpecialBindingViewTypeBuilder? = null
+    internal var errorView: SpecialBindingViewTypeBuilder? = null
+    internal var loadingView: SpecialBindingViewTypeBuilder? = null
 
     inline fun <reified T : BaseModel> addViewType(br: Int, func: ViewTypeBindingBuilder<T>.() -> Unit) {
         val holder = ViewTypeBindingBuilder<T>().apply {
@@ -65,20 +65,20 @@ class BindingRecyclerAdapterBuilder {
         }
     }
 
-    fun addEmptyView(func: SpecialViewTypeBindingBuilder.() -> Unit) {
-        emptyView = SpecialViewTypeBindingBuilder().apply {
+    fun addEmptyView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
+        emptyView = SpecialBindingViewTypeBuilder().apply {
             func()
         }
     }
 
-    fun addErrorView(func: SpecialViewTypeBindingBuilder.() -> Unit) {
-        errorView = SpecialViewTypeBindingBuilder().apply {
+    fun addErrorView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
+        errorView = SpecialBindingViewTypeBuilder().apply {
             func()
         }
     }
 
-    fun addLoadingView(func: SpecialViewTypeBindingBuilder.() -> Unit) {
-        loadingView = SpecialViewTypeBindingBuilder().apply {
+    fun addLoadingView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
+        loadingView = SpecialBindingViewTypeBuilder().apply {
             func()
         }
     }
@@ -102,25 +102,25 @@ class BindingRecyclerAdapterBuilder {
     internal fun <T : BaseModel> `access$addToHolderData`(holder: ViewTypeBindingBuilder<T>) = addToHolderData(holder)
 
     fun addDefaultEmptyView(msg: String = "No item found") {
-        emptyView = SpecialViewTypeBindingBuilder().apply {
+        emptyView = SpecialBindingViewTypeBuilder().apply {
             layout from R.layout.item_empty_default
             bind {
-                it.itemView.tvDefaultErrorMessage.text = msg
+                it.root.tvDefaultErrorMessage.text = msg
             }
         }
     }
 
     fun addDefaultEmptyView(@StringRes msgId: Int) {
-        emptyView = SpecialViewTypeBindingBuilder().apply {
+        emptyView = SpecialBindingViewTypeBuilder().apply {
             layout from R.layout.item_empty_default
             bind {
-                it.itemView.tvDefaultErrorMessage.text = it.itemView.context.getString(msgId)
+                it.root.tvDefaultErrorMessage.text = it.root.context.getString(msgId)
             }
         }
     }
 
     fun addDefaultLoadingView() {
-        loadingView = SpecialViewTypeBindingBuilder().apply {
+        loadingView = SpecialBindingViewTypeBuilder().apply {
             layout from R.layout.item_loading_default
         }
     }

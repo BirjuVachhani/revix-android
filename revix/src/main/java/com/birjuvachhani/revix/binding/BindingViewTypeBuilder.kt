@@ -18,8 +18,10 @@ package com.birjuvachhani.revix.binding
 
 import android.view.View
 import androidx.annotation.LayoutRes
+import androidx.databinding.ViewDataBinding
 import com.birjuvachhani.revix.common.BaseBindingVH
 import com.birjuvachhani.revix.common.BaseModel
+import com.birjuvachhani.revix.smart.isValidRes
 
 /**
  * Created by Birju Vachhani on 04/12/18.
@@ -28,7 +30,7 @@ import com.birjuvachhani.revix.common.BaseModel
 class ViewTypeBindingBuilder<T : BaseModel> {
     val layout = this
     @LayoutRes
-    internal var layoutId: Int = 0
+    internal var layoutId: Int = -1
     lateinit var modelClass: Class<T>
     internal var bindFunc: (t: T, holder: BaseBindingVH) -> Unit = { _, _ -> }
     internal var clickFunc: (view: View, model: T, position: Int) -> Unit = { _, _, _ -> }
@@ -52,18 +54,38 @@ class ViewTypeBindingBuilder<T : BaseModel> {
     }
 }
 
-class SpecialViewTypeBindingBuilder {
+class SpecialBindingViewTypeBuilder {
 
     val layout = this
     @LayoutRes
     internal var layoutId: Int = 0
-    internal var bindFunc: (holder: BaseBindingVH) -> Unit = {}
+    internal var bindFunc: (mBinding: ViewDataBinding) -> Unit = {}
+    internal var mBinding: ViewDataBinding? = null
 
-    fun bind(func: (holder: BaseBindingVH) -> Unit) {
+    fun bind(func: (mBinding: ViewDataBinding) -> Unit) {
         this.bindFunc = func
     }
 
     infix fun from(@LayoutRes id: Int) {
         layoutId = id
     }
+
+    internal fun build(): SpecialBindingViewType {
+        val v = mBinding
+        return when {
+            v != null -> SpecialBindingViewType.Inflated(v)
+            layoutId.isValidRes() -> SpecialBindingViewType.Raw(layoutId, bindFunc)
+            else -> throw Exception("No view configuration is provided for Special View. Layout res or view is missing")
+        }
+    }
 }
+
+sealed class SpecialBindingViewType {
+    data class Inflated(val mBinding: ViewDataBinding) : SpecialBindingViewType()
+    data class Raw(@LayoutRes val layoutId: Int, val bindFunc: (mBinding: ViewDataBinding) -> Unit) :
+        SpecialBindingViewType()
+
+    object Unspecified : SpecialBindingViewType()
+}
+
+fun Int.isValidRes(): Boolean = this != -1 && this != 0
