@@ -20,4 +20,6 @@ package com.birjuvachhani.revix.common
  * Created by Birju Vachhani on 20/02/19.
  */
 
-inline fun <reified T> T.classHash() = T::class.java.hashCode()
+fun Any.classHash(): Int {
+    return this::class.java.hashCode()
+}
