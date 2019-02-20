@@ -19,7 +19,6 @@ package com.birjuvachhani.revix.smart
 import android.view.View
 import androidx.annotation.LayoutRes
 import com.birjuvachhani.revix.common.BaseModel
-import com.birjuvachhani.revix.common.BaseVH
 
 /**
  * Created by Birju Vachhani on 04/12/18.
@@ -30,11 +29,11 @@ class ViewTypeBuilder<T : BaseModel> {
     @LayoutRes
     internal var layoutId: Int = -1
     lateinit var modelClass: Class<T>
-    internal var bindFunc: (t: T, holder: BaseVH) -> Unit = { _, _ -> }
+    internal var bindFunc: (t: T, view: View) -> Unit = { _, _ -> }
     internal var clickFunc: (view: View, model: T, position: Int) -> Unit = { _, _, _ -> }
     internal var filterFunc: (model: T, search: String) -> Boolean = { _, _ -> false }
 
-    fun bind(func: (model: T, holder: BaseVH) -> Unit) {
+    fun bind(func: (model: T, view: View) -> Unit) {
         this.bindFunc = func
     }
 
@@ -49,15 +48,33 @@ class ViewTypeBuilder<T : BaseModel> {
     infix fun from(@LayoutRes id: Int) {
         layoutId = id
     }
+
+    internal fun build(): ViewType<T> {
+        return when {
+            layoutId.isValidRes() -> ViewType.Specified(layoutId, bindFunc, clickFunc, filterFunc)
+            else -> throw Exception("No layout is specified for specified type")
+        }
+    }
+}
+
+sealed class ViewType<out T> {
+    data class Specified<T>(
+        @LayoutRes val layoutId: Int,
+        val bindFunc: (t: T, view: View) -> Unit,
+        val clickFunc: (view: View, model: T, position: Int) -> Unit,
+        val filterFunc: (model: T, search: String) -> Boolean
+    ) : ViewType<T>()
+
+    class Unspecified<T> : ViewType<T>()
 }
 
 class SpecialViewTypeBuilder {
 
     val layout = this
     @LayoutRes
-    internal var layoutId: Int = 0
-    internal var bindFunc: (view: View) -> Unit = {}
-    internal var view: View? = null
+    private var layoutId: Int = 0
+    private var bindFunc: (view: View) -> Unit = {}
+    private var view: View? = null
 
     fun bind(func: (view: View) -> Unit) {
         this.bindFunc = func

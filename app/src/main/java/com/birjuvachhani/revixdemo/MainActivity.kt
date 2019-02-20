@@ -19,9 +19,11 @@ package com.birjuvachhani.revixdemo
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.birjuvachhani.revix.binding.basic.BasicBindingAdapter
 import com.birjuvachhani.revix.common.BaseModel
+import com.birjuvachhani.revix.smart.RVAdapter
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.item_image.view.*
+import kotlinx.android.synthetic.main.item_video.view.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -78,22 +80,21 @@ class MainActivity : AppCompatActivity() {
                  addDefaultLoadingView()
              }*/
 
-//        val basicAdapter = BasicAdapter<ChatImageModel> {
-//            setViewType {
-//                layout from R.layout.item_image
-//                bind { model, view ->
-//                    view.tvImageText.text = model.imageTitle
-//                }
-//
-//                onClick { view, model, position ->
-//                    Toast.makeText(this@MainActivity, model.imageTitle, Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//            emptyView(R.string.no_items_found)
-//            loadingView(android.R.color.holo_red_dark)
-//            errorView("Error!")
-//        }
+/*        val basicAdapter = BasicAdapter<ChatImageModel> {
+            setViewType {
+                layout from R.layout.item_image
+                bind { model, view ->
+                    view.tvImageText.text = model.imageTitle
+                }
 
+                onClick { view, model, position ->
+                    Toast.makeText(this@MainActivity, model.imageTitle, Toast.LENGTH_SHORT).show()
+                }
+            }
+            emptyViewType(R.string.no_items_found)
+            loadingViewType(android.R.color.holo_red_dark)
+            errorViewType("Error!")
+        }
         val basicAdapter = BasicBindingAdapter<ChatImageModel> {
             setViewType(BR.image) {
                 layout from R.layout.item_image
@@ -105,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             emptyView(R.string.no_items_found)
             loadingView(android.R.color.holo_red_dark)
             errorView("Error!")
-        }
+        }*/
 
 
         val list = ArrayList<BaseModel>()
@@ -140,16 +141,42 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
+        val basicAdapter = RVAdapter {
+            addViewType<ChatImageModel> {
+                layout from R.layout.item_image
+                bind { model, view ->
+                    view.tvImageText.text = model.imageTitle
+                }
+
+                onClick { _, model, _ ->
+                    Toast.makeText(this@MainActivity, model.imageTitle, Toast.LENGTH_SHORT).show()
+                }
+            }
+            addViewType<ChatVideoModel> {
+                layout from R.layout.item_video
+                bind { model, view ->
+                    view.tvVideoText.text = model.videoTitle
+                }
+
+                onClick { _, model, _ ->
+                    Toast.makeText(this@MainActivity, model.videoTitle, Toast.LENGTH_SHORT).show()
+                }
+            }
+            loadingView(android.R.color.holo_orange_dark)
+        }
         rvList.adapter = basicAdapter
         basicAdapter.setData(
             arrayListOf(
                 ChatImageModel("Image 1"),
                 ChatImageModel("Image 2"),
-                ChatImageModel("Image 3")
+                ChatImageModel("Image 3"),
+                ChatVideoModel("Video 1"),
+                ChatVideoModel("Video 2"),
+                ChatVideoModel("Video 3")
             )
         )
         btnRefresh.setOnClickListener {
-            basicAdapter.setError()
+            basicAdapter.setLoading()
         }
 //        adapter.setData(list)
     }
