@@ -16,11 +16,16 @@
 
 package com.birjuvachhani.revix.binding
 
+import android.graphics.drawable.AnimationDrawable
+import androidx.annotation.ColorRes
 import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
+import androidx.databinding.ViewDataBinding
 import com.birjuvachhani.revix.R
 import com.birjuvachhani.revix.common.BaseModel
 import kotlinx.android.synthetic.main.item_empty_default.view.*
+import kotlinx.android.synthetic.main.item_loading_default.view.*
 
 /**
  * Created by Birju Vachhani on 04/12/18.
@@ -28,10 +33,10 @@ import kotlinx.android.synthetic.main.item_empty_default.view.*
 
 class BindingRecyclerAdapterBuilder {
 
-    internal var holderData = mutableMapOf<Int, BindingHolderData>()
-    internal var emptyView: SpecialBindingViewTypeBuilder? = null
-    internal var errorView: SpecialBindingViewTypeBuilder? = null
-    internal var loadingView: SpecialBindingViewTypeBuilder? = null
+    internal var holderData = mutableMapOf<Int, BindingViewType<BaseModel>>()
+    internal var emptyViewType: SpecialBindingViewType = SpecialBindingViewType.Unspecified
+    internal var errorViewType: SpecialBindingViewType = SpecialBindingViewType.Unspecified
+    internal var loadingViewType: SpecialBindingViewType = SpecialBindingViewType.Unspecified
 
     inline fun <reified T : BaseModel> addViewType(br: Int, func: ViewTypeBindingBuilder<T>.() -> Unit) {
         val holder = ViewTypeBindingBuilder<T>().apply {
@@ -45,6 +50,107 @@ class BindingRecyclerAdapterBuilder {
             e.printStackTrace()
             throw java.lang.RuntimeException("Cannot cast to ViewTypeBuilder<BaseModel>")
         }
+    }
+
+    /**
+     * Allows to configure empty view for recycler view
+     * */
+    fun emptyView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
+        emptyViewType = SpecialBindingViewTypeBuilder().apply(func).build()
+    }
+
+    /**
+     * Enables default empty view
+     * @param message is the text that will be displayed when empty view is shown
+     * */
+    fun emptyView(message: String = "No item found") {
+        emptyViewType = SpecialBindingViewType.Raw(R.layout.item_empty_default) {
+            it.root.tvDefaultErrorMessage.text = message
+        }
+    }
+
+    /**
+     * sets an empty view with text retrieved from given resource
+     * @param id is the string resource from which empty message text will be retrieved
+     * */
+    fun emptyView(@StringRes id: Int) {
+        emptyViewType = SpecialBindingViewType.Raw(R.layout.item_empty_default) {
+            it.root.tvDefaultErrorMessage.text = it.root.context.getString(id)
+        }
+    }
+
+    /**
+     * sets an empty view using given view
+     * */
+    fun emptyView(mBinding: ViewDataBinding) {
+        emptyViewType = SpecialBindingViewType.Inflated(mBinding)
+    }
+
+    /**
+     * Allows to configure loading view for recycler view
+     * */
+    fun loadingView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
+        loadingViewType = SpecialBindingViewTypeBuilder().apply(func).build()
+    }
+
+    /**
+     * sets loading view by applying provided color on ProgressBar
+     * */
+    fun loadingView(@ColorRes color: Int) {
+        loadingViewType = SpecialBindingViewType.Raw(R.layout.item_loading_default) {
+            it.root.progressBar.indeterminateDrawable.setColorFilter(
+                ContextCompat.getColor(it.root.context, color), android.graphics.PorterDuff.Mode.MULTIPLY
+            )
+        }
+    }
+
+    /**
+     * sets a loading view with from given animation drawable
+     * */
+    fun loadingView(drawable: AnimationDrawable) {
+        loadingViewType = SpecialBindingViewType.Raw(R.layout.item_loading_default) {
+            it.root.progressBar.indeterminateDrawable = drawable
+        }
+    }
+
+    /**
+     * sets loading view from given view
+     * */
+    fun loadingView(mBinding: ViewDataBinding) {
+        loadingViewType = SpecialBindingViewType.Inflated(mBinding)
+    }
+
+    /**
+     * Allows to configure error view for recycler view
+     * */
+    fun errorView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
+        errorViewType = SpecialBindingViewTypeBuilder().apply(func).build()
+    }
+
+    /**
+     * Enables default error view
+     * @param message is the text that will be displayed when error view is shown
+     * */
+    fun errorView(message: String = "No item found") {
+        errorViewType = SpecialBindingViewType.Raw(R.layout.item_empty_default) {
+            it.root.tvDefaultErrorMessage.text = message
+        }
+    }
+
+    /**
+     * sets an error view with text retrieved from given resource
+     * */
+    fun errorView(@StringRes id: Int) {
+        errorViewType = SpecialBindingViewType.Raw(R.layout.item_empty_default) {
+            it.root.tvDefaultErrorMessage.text = it.root.context.getString(id)
+        }
+    }
+
+    /**
+     * sets an error view from given view
+     * */
+    fun errorView(mBinding: ViewDataBinding) {
+        errorViewType = SpecialBindingViewType.Inflated(mBinding)
     }
 
     inline fun <reified T : BaseModel> addViewType(
@@ -65,63 +171,17 @@ class BindingRecyclerAdapterBuilder {
         }
     }
 
-    fun addEmptyView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
-        emptyView = SpecialBindingViewTypeBuilder().apply {
-            func()
-        }
-    }
-
-    fun addErrorView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
-        errorView = SpecialBindingViewTypeBuilder().apply {
-            func()
-        }
-    }
-
-    fun addLoadingView(func: SpecialBindingViewTypeBuilder.() -> Unit) {
-        loadingView = SpecialBindingViewTypeBuilder().apply {
-            func()
-        }
-    }
-
     private fun <T : BaseModel> addToHolderData(holder: ViewTypeBindingBuilder<T>) {
         @Suppress("UNCHECKED_CAST")
-        holderData[holder.modelClass.hashCode()] =
-            BindingHolderData(
-                holder.layoutId,
-                holder as ViewTypeBindingBuilder<BaseModel>
-            )
+        holderData[holder.modelClass.hashCode()] = holder.build()
     }
 
-    fun hasEmptyView(): Boolean = emptyView !== null
+    fun hasEmptyView(): Boolean = emptyViewType !is SpecialBindingViewType.Unspecified
 
-    fun hasErrorView(): Boolean = errorView !== null
+    fun hasErrorView(): Boolean = errorViewType !is SpecialBindingViewType.Unspecified
 
-    fun hasLoadingView(): Boolean = loadingView !== null
+    fun hasLoadingView(): Boolean = loadingViewType !is SpecialBindingViewType.Unspecified
 
     @PublishedApi
     internal fun <T : BaseModel> `access$addToHolderData`(holder: ViewTypeBindingBuilder<T>) = addToHolderData(holder)
-
-    fun addDefaultEmptyView(msg: String = "No item found") {
-        emptyView = SpecialBindingViewTypeBuilder().apply {
-            layout from R.layout.item_empty_default
-            bind {
-                it.root.tvDefaultErrorMessage.text = msg
-            }
-        }
-    }
-
-    fun addDefaultEmptyView(@StringRes msgId: Int) {
-        emptyView = SpecialBindingViewTypeBuilder().apply {
-            layout from R.layout.item_empty_default
-            bind {
-                it.root.tvDefaultErrorMessage.text = it.root.context.getString(msgId)
-            }
-        }
-    }
-
-    fun addDefaultLoadingView() {
-        loadingView = SpecialBindingViewTypeBuilder().apply {
-            layout from R.layout.item_loading_default
-        }
-    }
 }

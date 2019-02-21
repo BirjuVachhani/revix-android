@@ -116,7 +116,11 @@ open class BasicAdapter<T>(func: BasicAdapterBuilder<T>.() -> Unit) : RecyclerVi
                     is BasicViewType.Specified -> {
                         type.bindFunc.invoke(filteredList[position], holder.itemView)
                         holder.itemView.setOnClickListener {
-                            type.clickFunc(holder.itemView, filteredList[position], holder.adapterPosition)
+                            type.clickFunc(
+                                holder.itemView,
+                                filteredList[holder.adapterPosition],
+                                holder.adapterPosition
+                            )
                         }
                     }
                 }

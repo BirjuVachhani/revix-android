@@ -38,7 +38,7 @@ class RVBindingAdapter(config: BindingRecyclerAdapterBuilder.() -> Unit) :
 
     protected var baseList: ArrayList<BaseModel> = ArrayList()
     protected var filteredList: ArrayList<BaseModel> = ArrayList()
-    internal var holders: MutableMap<Int, BindingHolderData> = mutableMapOf()
+    internal var holders: MutableMap<Int, BindingViewType<BaseModel>> = mutableMapOf()
     protected val builder: BindingRecyclerAdapterBuilder
     protected val state = MutableLiveData<RecyclerAdapterState>()
     protected var filter = AdapterFilter()
@@ -59,28 +59,28 @@ class RVBindingAdapter(config: BindingRecyclerAdapterBuilder.() -> Unit) :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseBindingVH =
         when (viewType) {
             EMPTY -> {
-                builder.emptyView?.run {
-                    getViewHolder(parent, layoutId)
-                } ?: throw Exception("Layout Res not found for empty view")
+                getViewHolderFromType(builder.emptyViewType, parent, "empty")
             }
             ERROR -> {
-                builder.errorView?.run {
-                    getViewHolder(parent, layoutId)
-                } ?: throw Exception("Layout Res not found for error view")
+                getViewHolderFromType(builder.errorViewType, parent, "error")
             }
             LOADING -> {
-                builder.loadingView?.run {
-                    getViewHolder(parent, layoutId)
-                } ?: throw Exception("Layout Res not found loading view")
+                getViewHolderFromType(builder.loadingViewType, parent, "loading")
             }
             else -> {
-                holders[viewType]?.let {
-                    if (it.layout == 0) {
-                        throw RuntimeException("No layout specified for model: ${it.builder.modelClass.simpleName}")
-                    }
-                    return getViewHolder(parent, it.layout)
-                } ?: throw RuntimeException("View type is not found")
+                val type = holders[viewType]
+                when (type) {
+                    is BindingViewType.Specified<*> -> getViewHolder(parent, type.layoutId)
+                    else -> throw Exception("No layoutId specified for recycler view item")
+                }
             }
+        }
+
+    private fun getViewHolderFromType(type: SpecialBindingViewType, parent: ViewGroup, typedName: String) =
+        when (type) {
+            is SpecialBindingViewType.Inflated -> BaseBindingVH(type.mBinding)
+            is SpecialBindingViewType.Raw -> getViewHolder(parent, type.layoutId)
+            is SpecialBindingViewType.Unspecified -> throw Exception("Tried to use $typedName view when it is not configured")
         }
 
     private fun getViewHolder(parent: ViewGroup, @LayoutRes id: Int) =
@@ -109,29 +109,37 @@ class RVBindingAdapter(config: BindingRecyclerAdapterBuilder.() -> Unit) :
     override fun onBindViewHolder(holder: BaseBindingVH, position: Int) {
         when (getItemViewType(position)) {
             EMPTY -> {
-                builder.emptyView?.apply { bindFunc(holder.mBinding) }
+                val type = builder.emptyViewType
+                when (type) {
+                    is SpecialBindingViewType.Raw -> type.bindFunc(holder.mBinding)
+                }
             }
             ERROR -> {
-                builder.errorView?.apply { bindFunc(holder.mBinding) }
+                val type = builder.errorViewType
+                when (type) {
+                    is SpecialBindingViewType.Raw -> type.bindFunc(holder.mBinding)
+                }
             }
             LOADING -> {
-                builder.loadingView?.apply { bindFunc(holder.mBinding) }
+                val type = builder.loadingViewType
+                when (type) {
+                    is SpecialBindingViewType.Raw -> type.bindFunc(holder.mBinding)
+                }
             }
             else -> {
-                holders[filteredList[position].classHash()]?.run {
-                    holder.mBinding.takeIf { builder.br != -1 }?.setVariable(builder.br, filteredList[position])
-                    builder.bindFunc.invoke(
-                        filteredList[position],
-                        holder
-                    )
-                }
-                holder.itemView.setOnClickListener {
-                    holders[filteredList[position].classHash()]?.run {
-                        builder.clickFunc.invoke(
-                            holder.itemView,
-                            filteredList[position],
-                            holder.adapterPosition
-                        )
+
+                val type = holders[filteredList[position].classHash()]
+                when (type) {
+                    is BindingViewType.Specified -> {
+                        holder.mBinding.setVariable(type.variable, filteredList[position])
+                        type.bindFunc(filteredList[position], holder.mBinding)
+                        holder.itemView.setOnClickListener {
+                            type.clickFunc(
+                                holder.itemView,
+                                filteredList[holder.adapterPosition],
+                                holder.adapterPosition
+                            )
+                        }
                     }
                 }
             }
@@ -186,9 +194,11 @@ class RVBindingAdapter(config: BindingRecyclerAdapterBuilder.() -> Unit) :
             } else {
                 filteredList.clear()
                 filteredList.addAll(baseList.filter { item ->
-                    holders[item.classHash()]
-                        ?.builder?.filterFunc
-                        ?.invoke(item, searchString) ?: false
+                    val type = holders[item.classHash()]
+                    when (type) {
+                        is BindingViewType.Specified -> type.filterFunc(item, searchString)
+                        else -> false
+                    }
                 })
             }
             state.postValue(
