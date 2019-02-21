@@ -16,11 +16,8 @@
 
 package com.birjuvachhani.revix.binding
 
-import androidx.annotation.LayoutRes
-import com.birjuvachhani.revix.common.BaseModel
-
 /**
  * Created by Birju Vachhani on 04/12/18.
  */
 
-internal class BindingHolderData(@LayoutRes val layout: Int, val builder: ViewTypeBindingBuilder<BaseModel>)
+//internal class BindingHolderData(@LayoutRes val layout: Int, val builder: ViewTypeBindingBuilder<BaseModel>)

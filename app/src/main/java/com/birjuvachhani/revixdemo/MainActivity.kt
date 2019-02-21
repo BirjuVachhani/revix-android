@@ -17,13 +17,10 @@
 package com.birjuvachhani.revixdemo
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.birjuvachhani.revix.binding.RVBindingAdapter
 import com.birjuvachhani.revix.common.BaseModel
-import com.birjuvachhani.revix.smart.RVAdapter
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.item_image.view.*
-import kotlinx.android.synthetic.main.item_video.view.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -141,7 +138,29 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
-        val basicAdapter = RVAdapter {
+        val basicAdapter = RVBindingAdapter {
+            addViewType<ChatImageModel>(BR.image, R.layout.item_image) {
+                onClick { view, model, position ->
+
+                }
+                filter { model, search ->
+                    model.imageTitle.contains(search, true)
+                }
+            }
+            addViewType<ChatVideoModel>(BR.video) {
+                layout from R.layout.item_video
+                onClick { view, model, position ->
+
+                }
+                filter { model, search ->
+                    model.videoTitle.contains(search, true)
+                }
+            }
+
+        }
+
+
+        /*val basicAdapter = RVAdapter {
             addViewType<ChatImageModel> {
                 layout from R.layout.item_image
                 bind { model, view ->
@@ -163,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             loadingView(android.R.color.holo_orange_dark)
-        }
+        }*/
         rvList.adapter = basicAdapter
         basicAdapter.setData(
             arrayListOf(
@@ -176,7 +195,9 @@ class MainActivity : AppCompatActivity() {
             )
         )
         btnRefresh.setOnClickListener {
-            basicAdapter.setLoading()
+            //            basicAdapter.setError()
+            basicAdapter.filter.filter("im")
+
         }
 //        adapter.setData(list)
     }

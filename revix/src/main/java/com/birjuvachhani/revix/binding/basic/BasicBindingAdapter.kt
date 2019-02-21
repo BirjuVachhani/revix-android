@@ -126,7 +126,11 @@ open class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit
                         holder.mBinding.takeIf { type.variable != -1 }
                             ?.setVariable(type.variable, filteredList[position])
                         holder.itemView.setOnClickListener {
-                            type.clickFunc(holder.itemView, filteredList[position], holder.adapterPosition)
+                            type.clickFunc(
+                                holder.itemView,
+                                filteredList[holder.adapterPosition],
+                                holder.adapterPosition
+                            )
                         }
                     }
                 }

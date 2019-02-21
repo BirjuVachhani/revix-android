@@ -132,7 +132,11 @@ open class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
                     is ViewType.Specified -> {
                         type.bindFunc(filteredList[position], holder.itemView)
                         holder.itemView.setOnClickListener {
-                            type.clickFunc(holder.itemView, filteredList[position], holder.adapterPosition)
+                            type.clickFunc(
+                                holder.itemView,
+                                filteredList[holder.adapterPosition],
+                                holder.adapterPosition
+                            )
                         }
                     }
                 }
