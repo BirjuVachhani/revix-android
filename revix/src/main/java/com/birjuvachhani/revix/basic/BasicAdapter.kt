@@ -133,10 +133,22 @@ open class BasicAdapter<T>(func: BasicAdapterBuilder<T>.() -> Unit) : RecyclerVi
         return filter
     }
 
+    open fun addItems(newList: ArrayList<T>) {
+        filteredList.addAll(newList)
+        baseList.addAll(ArrayList(newList))
+        notifyDataSetChanged()
+    }
+
+    open fun addItem(newItem: T) {
+        baseList.add(newItem)
+        filteredList.add(newItem)
+        notifyDataSetChanged()
+    }
+
     fun setData(newList: ArrayList<T>) {
         checkEmpty(newList)
-        this.filteredList = newList
-        this.baseList = ArrayList(newList)
+        filteredList = newList
+        baseList = ArrayList(newList)
         notifyDataSetChanged()
     }
 
