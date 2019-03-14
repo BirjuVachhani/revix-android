@@ -133,13 +133,17 @@ open class BasicAdapter<T>(func: BasicAdapterBuilder<T>.() -> Unit) : RecyclerVi
         return filter
     }
 
-    open fun addItems(newList: ArrayList<T>) {
+    fun filter(search: String) {
+        filter.filter(search)
+    }
+
+    fun addItems(newList: ArrayList<T>) {
         filteredList.addAll(newList)
         baseList.addAll(ArrayList(newList))
         notifyDataSetChanged()
     }
 
-    open fun addItem(newItem: T) {
+    fun addItem(newItem: T) {
         baseList.add(newItem)
         filteredList.add(newItem)
         notifyDataSetChanged()

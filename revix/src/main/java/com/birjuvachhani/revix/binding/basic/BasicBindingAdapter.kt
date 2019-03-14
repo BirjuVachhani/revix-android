@@ -142,6 +142,22 @@ open class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit
         return filter
     }
 
+    fun filter(search: String) {
+        filter.filter(search)
+    }
+
+    fun addItems(newList: ArrayList<T>) {
+        filteredList.addAll(newList)
+        baseList.addAll(ArrayList(newList))
+        notifyDataSetChanged()
+    }
+
+    fun addItem(newItem: T) {
+        baseList.add(newItem)
+        filteredList.add(newItem)
+        notifyDataSetChanged()
+    }
+
     fun setData(newList: ArrayList<T>) {
         checkEmpty(newList)
         this.filteredList = newList

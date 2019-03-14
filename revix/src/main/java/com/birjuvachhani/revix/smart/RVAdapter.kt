@@ -148,6 +148,22 @@ open class RVAdapter(config: RecyclerAdapterBuilder.() -> Unit) :
         return filter
     }
 
+    fun filter(search: String) {
+        filter.filter(search)
+    }
+
+    fun addItems(newList: ArrayList<BaseModel>) {
+        filteredList.addAll(newList)
+        baseList.addAll(ArrayList(newList))
+        notifyDataSetChanged()
+    }
+
+    fun addItem(newItem: BaseModel) {
+        baseList.add(newItem)
+        filteredList.add(newItem)
+        notifyDataSetChanged()
+    }
+
     fun setData(newList: ArrayList<BaseModel>) {
         checkEmpty(newList)
         this.filteredList = newList
