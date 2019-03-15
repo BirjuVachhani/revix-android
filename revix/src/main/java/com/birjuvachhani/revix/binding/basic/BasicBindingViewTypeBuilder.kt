@@ -25,10 +25,10 @@ class BasicBindingViewTypeBuilder<T> {
 
     @LayoutRes
     internal var layoutId: Int = -1
-    //    lateinit var modelClass: Class<T>
-    internal var bindFunc: (t: T, mBinding: ViewDataBinding) -> Unit = { _, _ -> }
-    internal var clickFunc: (view: View, model: T, position: Int) -> Unit = { _, _, _ -> }
-    internal var filterFunc: (model: T, search: String) -> Boolean = { _, _ -> false }
+    private var bindFunc: (t: T, mBinding: ViewDataBinding) -> Unit = { _, _ -> }
+    private var clickFunc: (view: View, model: T, position: Int) -> Unit = { _, _, _ -> }
+    private var filterFunc: (model: T, search: String) -> Boolean = { _, _ -> false }
+    private var itemIdFunc: (position: Int) -> Long = { 0 }
     var br: Int = -1
 
     val layout = this
@@ -49,14 +49,19 @@ class BasicBindingViewTypeBuilder<T> {
         this.filterFunc = func
     }
 
+    fun itemId(func: (position: Int) -> Long) {
+        this.itemIdFunc = func
+    }
+
     internal fun build(): BasicBindingViewType<T> {
         return when {
             layoutId.isValidRes() && br.isValidRes() -> BasicBindingViewType.Specified(
-                layoutId,
-                br,
-                bindFunc,
-                clickFunc,
-                filterFunc
+                layoutId = layoutId,
+                variable = br,
+                bindFunc = bindFunc,
+                clickFunc = clickFunc,
+                filterFunc = filterFunc,
+                itemIdFunc = itemIdFunc
             )
             else -> throw Exception("No Binding variable/No layout is specified for specified type")
         }
@@ -69,7 +74,8 @@ sealed class BasicBindingViewType<out T> {
         val variable: Int,
         val bindFunc: (t: T, mBinding: ViewDataBinding) -> Unit,
         val clickFunc: (view: View, model: T, position: Int) -> Unit,
-        val filterFunc: (model: T, search: String) -> Boolean
+        val filterFunc: (model: T, search: String) -> Boolean,
+        val itemIdFunc: (position: Int) -> Long
     ) : BasicBindingViewType<T>()
 
     class Unspecified<T> : BasicBindingViewType<T>()

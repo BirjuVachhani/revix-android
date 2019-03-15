@@ -138,6 +138,16 @@ open class BasicBindingAdapter<T>(func: BasicBindingAdapterBuilder<T>.() -> Unit
         }
     }
 
+    override fun getItemId(position: Int): Long {
+        val type = builder.itemViewType
+        return when {
+            state.value is RecyclerAdapterState.Data && type is BasicBindingViewType.Specified -> {
+                type.itemIdFunc(position)
+            }
+            else -> super.getItemId(position)
+        }
+    }
+
     override fun getFilter(): Filter {
         return filter
     }

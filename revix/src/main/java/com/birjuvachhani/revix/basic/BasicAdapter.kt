@@ -124,8 +124,17 @@ open class BasicAdapter<T>(func: BasicAdapterBuilder<T>.() -> Unit) : RecyclerVi
                         }
                     }
                 }
-
             }
+        }
+    }
+
+    override fun getItemId(position: Int): Long {
+        val type = builder.itemViewType
+        return when {
+            state.value is RecyclerAdapterState.Data && type is BasicViewType.Specified -> {
+                type.itemIdFunc(position)
+            }
+            else -> super.getItemId(position)
         }
     }
 

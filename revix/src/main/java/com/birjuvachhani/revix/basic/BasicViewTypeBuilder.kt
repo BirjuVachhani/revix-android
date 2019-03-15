@@ -27,6 +27,7 @@ class BasicViewTypeBuilder<T> {
     private var bindFunc: (t: T, view: View) -> Unit = { _, _ -> }
     private var clickFunc: (view: View, model: T, position: Int) -> Unit = { _, _, _ -> }
     private var filterFunc: (model: T, search: String) -> Boolean = { _, _ -> false }
+    private var itemIdFunc: (position: Int) -> Long = { 0 }
 
     val layout = this
 
@@ -46,9 +47,19 @@ class BasicViewTypeBuilder<T> {
         this.filterFunc = func
     }
 
+    fun itemId(func: (position: Int) -> Long) {
+        this.itemIdFunc = func
+    }
+
     internal fun build(): BasicViewType<T> {
         return when {
-            layoutId.isValidRes() -> BasicViewType.Specified(layoutId, bindFunc, clickFunc, filterFunc)
+            layoutId.isValidRes() -> BasicViewType.Specified(
+                layoutId = layoutId,
+                bindFunc = bindFunc,
+                clickFunc = clickFunc,
+                filterFunc = filterFunc,
+                itemIdFunc = itemIdFunc
+            )
             else -> throw Exception("No layout is specified for specified type")
         }
     }
@@ -59,7 +70,8 @@ sealed class BasicViewType<out T> {
         @LayoutRes val layoutId: Int,
         val bindFunc: (t: T, view: View) -> Unit,
         val clickFunc: (view: View, model: T, position: Int) -> Unit,
-        val filterFunc: (model: T, search: String) -> Boolean
+        val filterFunc: (model: T, search: String) -> Boolean,
+        val itemIdFunc: (position: Int) -> Long
     ) : BasicViewType<T>()
 
     class Unspecified<T> : BasicViewType<T>()
