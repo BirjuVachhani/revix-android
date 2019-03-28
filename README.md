@@ -54,14 +54,14 @@ dependencies {
 ```
 
 ### Pull Request
-To generate a pull request, please consider following [Pull Request Template](https://github.com/iChintanSoni/RepositoryPattern/blob/master/PULL_REQUEST_TEMPLATE.md).
+To generate a pull request, please consider following [Pull Request Template](https://github.com/BirjuVachhani/revix-android/blob/master/PULL_REQUEST_TEMPLATE.md).
 
 ### Issues
-To submit an issue, please check the [Issue Template](https://github.com/iChintanSoni/RepositoryPattern/blob/master/ISSUE_TEMPLATE.md).
+To submit an issue, please check the [Issue Template](https://github.com/BirjuVachhani/revix-android/blob/master/ISSUE_TEMPLATE.md).
 
 Code of Conduct
 ---
-[Code of Conduct](https://github.com/iChintanSoni/RepositoryPattern/blob/master/CODE_OF_CONDUCT.md)
+[Code of Conduct](https://github.com/BirjuVachhani/revix-android/blob/master/CODE_OF_CONDUCT.md)
 
 ## Contribution
 
