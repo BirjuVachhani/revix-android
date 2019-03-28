@@ -57,7 +57,7 @@ To generate a pull request, please consider following [Pull Request Template](ht
 
 * Search [GitHub](https://github.com/BirjuVachhani/revix-android/pulls) for an open or closed Pull Request
   that relates to your submission. You don't want to duplicate effort.
-* Please have a look at [License](https://github.com/BirjuVachhani/revix-android/blob/master/LICENSE.md) before sending pull
+* Please have a look at [License](https://github.com/BirjuVachhani/revix-android/blob/master/LICENSE) before sending pull
   requests. We cannot accept code without this.
 
 That's it! Thank you for your contribution!
