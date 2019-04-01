@@ -2,7 +2,7 @@
 
 * [ ] Put an X between the brackets on this line if you have done all of the following:
     * Reproduced the problem
-    * Checked that your issue isn't already filed: https://github.com/issues?utf8=✓&q=is%3Aissue+user%3AChintanSoni202
+    * Checked that your issue isn't already filed: https://github.com/issues?utf8=✓&q=is%3Aissue+user%3ABirjuVachhani
     
 ### Description
 
